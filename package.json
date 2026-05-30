@@ -1,0 +1,13 @@
+{
+  "name": "lua-obfuscator-bot",
+  "version": "1.0.0",
+  "description": "A Discord bot to obfuscate Lua code using Prometheus CLI.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "@gamely/prometheus-cli": "latest"
+  }
+}
