@@ -1,10 +1,18 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const express = require('express');
 require('dotenv').config();
+
+// 1. Web Server para manatiling online ang Render (Huwag buburahin)
+const app = express();
+app.get('/', (req, res) => res.send('Bot is active'));
+app.listen(process.env.PORT || 3000);
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 // --- FLATTENING ENGINE ---
 function flattenCode(script) {
+  if (!script) throw new Error("Walang laman ang script!");
+  
   const lines = script.split('\n').filter(l => l.trim() !== "");
   let states = lines.map((code, i) => ({ id: 1000 + i * 17, code }));
   states.sort(() => Math.random() - 0.5);
@@ -28,16 +36,26 @@ const commands = [
 client.on('ready', async () => {
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-  console.log('Bot Online!');
+  console.log('Bot Online at ready!');
 });
 
 client.on('interactionCreate', async i => {
   if (!i.isChatInputCommand()) return;
-  const raw = i.options.getString('code');
+  
   try {
+    const raw = i.options.getString('code');
     const output = flattenCode(raw);
-    await i.reply({ content: "```lua\n" + output + "\n```" });
-  } catch(e) { await i.reply("Error!"); }
+    
+    // Hahatiin natin ang output kung sobrang haba para hindi mag-error si Discord
+    if (output.length > 1900) {
+        await i.reply("Error: Masyadong mahaba ang script!");
+    } else {
+        await i.reply("```lua\n" + output + "\n```");
+    }
+  } catch(e) { 
+    console.error(e);
+    await i.reply("Error sa obfuscation: " + e.message); 
+  }
 });
 
 client.login(process.env.DISCORD_TOKEN);
